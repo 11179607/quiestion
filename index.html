@@ -533,6 +533,7 @@
   const MI_WHATSAPP = "573105950990";
   let decision = null;
   let flujoActivo = true;
+  let mensajeWhatsAppEnviado = false;
 
   function leerJSONSeguro(clave, valorPorDefecto = null) {
     try {
@@ -544,21 +545,34 @@
     }
   }
 
-  function guardarProgreso(seccionId, decisionVal, explicacionVal) {
+  function guardarProgreso(seccionId, decisionVal, explicacionVal, enviadoWhatsapp = false) {
     try {
       localStorage.setItem('progresoLuz', JSON.stringify({
         seccion: seccionId || 'cap1',
         decision: decisionVal || null,
-        explicacion: explicacionVal || ''
+        explicacion: explicacionVal || '',
+        mensajeEnviado: Boolean(enviadoWhatsapp)
       }));
     } catch (e) {
       // Si localStorage no está disponible, no rompemos el flujo.
     }
   }
 
+  function actualizarBotonReinicio() {
+    const btnReiniciar = document.getElementById('btnReiniciar');
+    if (!btnReiniciar) return;
+
+    btnReiniciar.disabled = !mensajeWhatsAppEnviado;
+    btnReiniciar.style.opacity = mensajeWhatsAppEnviado ? '1' : '0.55';
+    btnReiniciar.style.cursor = mensajeWhatsAppEnviado ? 'pointer' : 'not-allowed';
+  }
+
   function reiniciarFlujo() {
+    if (!mensajeWhatsAppEnviado) return;
+
     decision = null;
     flujoActivo = true;
+    mensajeWhatsAppEnviado = false;
 
     try {
       localStorage.removeItem('progresoLuz');
@@ -570,6 +584,7 @@
     const textarea = document.getElementById('explicacion');
     if (textarea) textarea.value = '';
 
+    actualizarBotonReinicio();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -597,12 +612,15 @@
 
     btn.href = `https://wa.me/${MI_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
     final.classList.add('activo');
+    actualizarBotonReinicio();
   }
 
   window.addEventListener('load', function () {
     const progreso = leerJSONSeguro('progresoLuz');
 
     if (progreso && progreso.seccion) {
+      mensajeWhatsAppEnviado = Boolean(progreso.mensajeEnviado);
+
       if (progreso.decision) {
         decision = progreso.decision;
         aplicarMensajeEleccion(decision);
@@ -628,6 +646,8 @@
     } else {
       document.getElementById('cap1').classList.add('activo');
     }
+
+    actualizarBotonReinicio();
   });
 
   history.pushState(null, null, location.href);
@@ -681,13 +701,16 @@
     const textarea = document.getElementById('explicacion');
     if (textarea) {
       textarea.addEventListener('input', function () {
-        guardarProgreso('seccionEleccion', decision, this.value);
+        guardarProgreso('seccionEleccion', decision, this.value, mensajeWhatsAppEnviado);
       });
     }
 
     const btnReiniciar = document.getElementById('btnReiniciar');
     if (btnReiniciar) {
-      btnReiniciar.addEventListener('click', reiniciarFlujo);
+      btnReiniciar.addEventListener('click', function () {
+        if (!mensajeWhatsAppEnviado) return;
+        reiniciarFlujo();
+      });
     }
   });
 
@@ -713,7 +736,8 @@
     }
 
     flujoActivo = false;
-    guardarProgreso('final', decision, explicacion);
+    mensajeWhatsAppEnviado = true;
+    guardarProgreso('final', decision, explicacion, true);
 
     document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
     prepararVistaFinal(decision, explicacion);
