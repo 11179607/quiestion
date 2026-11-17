@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>Para Luz</title>
+<style>
+  * { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: #f7f3ec;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(139,90,43,0.05) 0%, transparent 40%);
+    color: #2a241c;
+    min-height: 100vh;
+    min-height: 100dvh; /* dvh para móviles con barra */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(16px, 4vw, 40px) clamp(12px, 4vw, 30px);
+    padding-top: max(clamp(16px, 4vw, 40px), env(safe-area-inset-top));
+    padding-bottom: max(clamp(16px, 4vw, 40px), env(safe-area-inset-bottom));
+    padding-left: max(clamp(12px, 4vw, 30px), env(safe-area-inset-left));
+    padding-right: max(clamp(12px, 4vw, 30px), env(safe-area-inset-right));
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .contenedor {
+    max-width: 600px;
+    width: 100%;
+    animation: aparecer 0.9s ease;
+  }
+
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* -------- SECCIÓN -------- */
+  .seccion {
+    display: none;
+    padding: clamp(28px, 6vw, 48px) clamp(20px, 5vw, 42px);
+    background: #fdfbf7;
+    border-radius: 2px;
+    box-shadow: 
+      0 1px 3px rgba(42,36,28,0.06),
+      0 20px 50px rgba(42,36,28,0.08);
+    position: relative;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .seccion::before {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: clamp(20px, 5vw, 42px); 
+    right: clamp(20px, 5vw, 42px);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  }
+
+  .seccion.activo {
+    display: block;
+    animation: aparecer 0.7s ease;
+  }
+
+  .numero-cap {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(0.6rem, 2vw, 0.68rem);
+    letter-spacing: clamp(3px, 1vw, 5px);
+    color: #b08d3f;
+    text-transform: uppercase;
+    margin-bottom: clamp(18px, 4vw, 26px);
+    text-align: center;
+  }
+
+  .seccion h2 {
+    font-size: clamp(1.3rem, 5vw, 1.75rem);
+    font-weight: normal;
+    color: #1f1a13;
+    margin-bottom: clamp(20px, 5vw, 30px);
+    line-height: 1.35;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .seccion p {
+    font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+    line-height: 1.9;
+    color: #4a4038;
+    margin-bottom: clamp(16px, 3vw, 20px);
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+
+  .seccion p:last-of-type { margin-bottom: 0; }
+
+  .seccion strong {
+    color: #8b5a2b;
+    font-weight: normal;
+    font-style: italic;
+  }
+
+  .ornamento {
+    text-align: center;
+    margin: clamp(22px, 5vw, 30px) 0;
+    color: #c9a84c;
+    font-size: clamp(0.95rem, 3vw, 1.1rem);
+    letter-spacing: clamp(5px, 2vw, 8px);
+  }
+
+  /* -------- BOTÓN -------- */
+  .btn-siguiente {
+    display: block;
+    margin: clamp(30px, 6vw, 42px) auto 0;
+    padding: clamp(12px, 3vw, 15px) clamp(28px, 8vw, 42px);
+    min-height: 48px;
+    background: transparent;
+    border: 1px solid #c9a84c;
+    color: #8b5a2b;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(0.7rem, 2.5vw, 0.78rem);
+    letter-spacing: clamp(2px, 1vw, 3px);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border-radius: 2px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .btn-siguiente:hover,
+  .btn-siguiente:active {
+    background: #c9a84c;
+    color: #fdfbf7;
+    letter-spacing: clamp(2.5px, 1.2vw, 4px);
+  }
+
+  /* -------- FORMULARIO -------- */
+  .pregunta-intro {
+    font-size: clamp(0.85rem, 3vw, 0.95rem);
+    color: #7a6f63;
+    text-align: center;
+    margin-bottom: clamp(24px, 5vw, 34px);
+    font-style: italic;
+    line-height: 1.7;
+  }
+
+  .opcion {
+    display: block;
+    padding: clamp(18px, 4vw, 22px) clamp(18px, 4vw, 26px);
+    margin-bottom: clamp(10px, 2.5vw, 14px);
+    background: #faf6ef;
+    border: 1px solid #e8dfd0;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    position: relative;
+    min-height: 60px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .opcion:hover,
+  .opcion:active {
+    border-color: #c9a84c;
+    background: #fdf9f0;
+  }
+
+  .opcion strong {
+    display: block;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(0.88rem, 3vw, 0.95rem);
+    color: #1f1a13;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+
+  .opcion span {
+    display: block;
+    font-size: clamp(0.78rem, 2.8vw, 0.85rem);
+    color: #8a7f73;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* -------- SECCIÓN ELECCIÓN -------- */
+  .mensaje-eleccion {
+    display: none;
+    padding: clamp(28px, 6vw, 48px) clamp(20px, 5vw, 42px);
+    background: #fdfbf7;
+    border-radius: 2px;
+    box-shadow: 
+      0 1px 3px rgba(42,36,28,0.06),
+      0 20px 50px rgba(42,36,28,0.08);
+    position: relative;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .mensaje-eleccion::before {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: clamp(20px, 5vw, 42px); 
+    right: clamp(20px, 5vw, 42px);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  }
+
+  .mensaje-eleccion.activo {
+    display: block;
+    animation: aparecer 0.7s ease;
+  }
+
+  .mensaje-eleccion .icono {
+    text-align: center;
+    font-size: clamp(1.6rem, 5vw, 2rem);
+    color: #c9a84c;
+    margin-bottom: clamp(16px, 3vw, 20px);
+  }
+
+  .mensaje-eleccion h2 {
+    font-size: clamp(1.25rem, 4.5vw, 1.6rem);
+    font-weight: normal;
+    color: #1f1a13;
+    margin-bottom: clamp(18px, 4vw, 24px);
+    line-height: 1.35;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .mensaje-eleccion .texto-mensaje {
+    font-size: clamp(0.9rem, 3.2vw, 1rem);
+    line-height: 1.9;
+    color: #4a4038;
+    font-style: italic;
+    text-align: center;
+    margin-bottom: clamp(24px, 5vw, 34px);
+    padding: 0 clamp(4px, 1vw, 10px);
+  }
+
+  .mensaje-eleccion label {
+    display: block;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(0.7rem, 2.2vw, 0.78rem);
+    color: #b08d3f;
+    letter-spacing: clamp(1.5px, 0.6vw, 2px);
+    text-transform: uppercase;
+    margin-bottom: clamp(10px, 2.5vw, 14px);
+  }
+
+  .mensaje-eleccion textarea {
+    width: 100%;
+    min-height: 130px;
+    padding: clamp(14px, 3vw, 18px);
+    background: #faf6ef;
+    border: 1px solid #e8dfd0;
+    border-radius: 2px;
+    color: #2a241c;
+    font-family: 'Georgia', serif;
+    font-size: clamp(0.92rem, 3vw, 0.95rem);
+    line-height: 1.8;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.3s;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+  }
+
+  .mensaje-eleccion textarea:focus {
+    border-color: #c9a84c;
+  }
+
+  .mensaje-eleccion textarea::placeholder {
+    color: #b5aa9c;
+    font-style: italic;
+  }
+
+  .btn-enviar {
+    display: block;
+    width: 100%;
+    margin-top: clamp(24px, 5vw, 32px);
+    padding: clamp(14px, 3.5vw, 18px);
+    min-height: 52px;
+    background: #1f1a13;
+    border: none;
+    color: #fdfbf7;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(0.75rem, 2.5vw, 0.82rem);
+    font-weight: bold;
+    letter-spacing: clamp(2px, 1vw, 3px);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border-radius: 2px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .btn-enviar:hover,
+  .btn-enviar:active {
+    background: #8b5a2b;
+    letter-spacing: clamp(2.5px, 1.2vw, 4px);
+  }
+
+  /* -------- FINAL -------- */
+  .final {
+    display: none;
+    padding: clamp(40px, 8vw, 60px) clamp(20px, 5vw, 42px);
+    text-align: center;
+    background: #fdfbf7;
+    border-radius: 2px;
+    box-shadow: 
+      0 1px 3px rgba(42,36,28,0.06),
+      0 20px 50px rgba(42,36,28,0.08);
+    position: relative;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .final::before {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: clamp(20px, 5vw, 42px); 
+    right: clamp(20px, 5vw, 42px);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  }
+
+  .final.activo { display: block; }
+
+  .final .simbolo {
+    font-size: clamp(1.6rem, 5vw, 2rem);
+    color: #c9a84c;
+    margin-bottom: clamp(16px, 3vw, 24px);
+  }
+
+  .final h2 {
+    font-size: clamp(1.25rem, 4.5vw, 1.6rem);
+    color: #1f1a13;
+    margin-bottom: clamp(16px, 3vw, 22px);
+    font-weight: normal;
+    font-style: italic;
+  }
+
+  .final p {
+    font-size: clamp(0.92rem, 3.2vw, 1rem);
+    line-height: 1.9;
+    color: #4a4038;
+    margin-bottom: clamp(24px, 5vw, 34px);
+    font-style: italic;
+  }
+
+  .btn-wsp {
+    display: inline-block;
+    padding: clamp(12px, 3vw, 15px) clamp(26px, 8vw, 40px);
+    min-height: 48px;
+    background: #25d366;
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: bold;
+    font-size: clamp(0.72rem, 2.5vw, 0.82rem);
+    letter-spacing: clamp(1.5px, 0.6vw, 2px);
+    text-transform: uppercase;
+    border-radius: 2px;
+    transition: opacity 0.3s;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .btn-wsp:hover,
+  .btn-wsp:active { opacity: 0.85; }
+
+  /* -------- MEDIA QUERIES EXTRA -------- */
+  @media (max-width: 360px) {
+    .seccion h2 { font-size: 1.2rem; }
+    .seccion p { font-size: 0.92rem; }
+    .btn-siguiente { padding: 12px 24px; }
+  }
+
+  @media (min-width: 768px) {
+    .contenedor { max-width: 640px; }
+  }
+
+  /* Landscape en móviles */
+  @media (max-height: 500px) and (orientation: landscape) {
+    body { align-items: flex-start; }
+    .seccion, .mensaje-eleccion, .final { padding-top: 20px; padding-bottom: 20px; }
+    .numero-cap { margin-bottom: 12px; }
+    .seccion h2 { margin-bottom: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+
+  <!-- CAPÍTULO 1 -->
+  <div class="seccion" id="cap1">
+    <div class="numero-cap">Capítulo I</div>
+    <h2>Las relaciones no son fáciles</h2>
+    <p>Una relación no es solo amor. Es también cansancio, silencios, malentendidos, días en los que uno no tiene fuerzas y el otro tiene que sostener.</p>
+    <p>Las relaciones son duras porque unen dos mundos distintos: dos crianzas, dos formas de reaccionar cuando algo duele. Y aun así, la gente se queda. Porque cuando es real, vale la pena.</p>
+    <div class="ornamento">· · ·</div>
+    <button class="btn-siguiente" onclick="mostrarSeccion('cap2')">Continuar</button>
+  </div>
+
+  <!-- CAPÍTULO 2 -->
+  <div class="seccion" id="cap2">
+    <div class="numero-cap">Capítulo II</div>
+    <h2>Lo difícil de verdad</h2>
+    <p>Lo más difícil no es pelear. Lo más difícil es reconocer cuándo uno está fallando, pedir perdón sin excusas, y quedarse cuando lo más fácil sería huir.</p>
+    <p>Contigo aprendí que amar también es cansarse y aún así elegir. Es llorar y aún así querer arreglarlo. Es ver lo feo del otro y no dejar de ver lo bonito.</p>
+    <div class="ornamento">· · ·</div>
+    <button class="btn-siguiente" onclick="mostrarSeccion('cap3')">Continuar</button>
+  </div>
+
+  <!-- CAPÍTULO 3 -->
+  <div class="seccion" id="cap3">
+    <div class="numero-cap">Capítulo III</div>
+    <h2>Mi situación, Luz</h2>
+    <p>Hoy no te escribo para hablarte de lo bonito. Te escribo porque hay algo que me pesa y necesito ser honesto contigo.</p>
+    <p>Estoy pasando por un momento económico muy difícil. No es una excusa, no es un capricho. Es una realidad que me tiene limitado y que no quiero esconderte.</p>
+    <p>Siendo sincero con lo que veo hoy, calculo que puedo tardar <strong>hasta 3 años</strong> en estabilizarme. Y no quiero que esperes en la oscuridad sin saberlo. Prefiero que sepas la verdad y que decidas tú, con libertad.</p>
+    <div class="ornamento">· · ·</div>
+    <button class="btn-siguiente" onclick="mostrarSeccion('cap4')">Continuar</button>
+  </div>
+
+  <!-- FORMULARIO -->
+  <div class="seccion" id="cap4">
+    <div class="numero-cap">La decisión es tuya</div>
+    <h2>¿Qué sientes, Luz?</h2>
+    <p class="pregunta-intro">No hay respuesta correcta ni incorrecta.<br>Solo quiero saber qué sientes de verdad, sin presión.</p>
+
+    <label class="opcion" onclick="elegir('esperar')">
+      <strong>Te espero los 3 años</strong>
+      <span>Estoy dispuesta a caminar esto contigo, aunque sea difícil.</span>
+    </label>
+
+    <label class="opcion" onclick="elegir('irme')">
+      <strong>Prefiero irme ahora</strong>
+      <span>No quiero esperar. Prefiero cerrar este capítulo con respeto.</span>
+    </label>
+
+    <label class="opcion" onclick="elegir('pensarlo')">
+      <strong>Necesito pensarlo</strong>
+      <span>Quiero tiempo para procesarlo y hablarlo contigo con calma.</span>
+    </label>
+  </div>
+
+  <!-- SECCIÓN ELECCIÓN -->
+  <div class="mensaje-eleccion" id="seccionEleccion">
+    <div class="icono" id="iconoEleccion">❦</div>
+    <h2 id="tituloEleccion"></h2>
+    <p class="texto-mensaje" id="textoEleccion"></p>
+
+    <label for="explicacion">¿Por qué elegiste esta opción?</label>
+    <textarea id="explicacion" placeholder="Cuéntame con tus palabras lo que sientes..."></textarea>
+
+    <button class="btn-enviar" onclick="enviar()">Enviar mi respuesta</button>
+  </div>
+
+  <!-- FINAL -->
+  <div class="final" id="final">
+    <div class="simbolo">❦</div>
+    <h2 id="tituloFinal"></h2>
+    <p id="textoFinal"></p>
+    <a id="btnWsp" class="btn-wsp" href="#" target="_blank">Abrir WhatsApp</a>
+  </div>
+
+</div>
+
+<script>
+  const MI_WHATSAPP = "573000000000"; // ← CAMBIA por tu número real
+  let decision = null;
+  let flujoActivo = true;
+
+  function guardarProgreso(seccionId, decisionVal, explicacionVal) {
+    try {
+      localStorage.setItem('progresoLuz', JSON.stringify({
+        seccion: seccionId,
+        decision: decisionVal || null,
+        explicacion: explicacionVal || ''
+      }));
+    } catch(e) {}
+  }
+
+  window.addEventListener('load', function () {
+    let progreso = null;
+    try {
+      progreso = JSON.parse(localStorage.getItem('progresoLuz') || 'null');
+    } catch(e) {}
+
+    if (progreso && progreso.seccion) {
+      if (progreso.decision) {
+        decision = progreso.decision;
+        aplicarMensajeEleccion(progreso.decision);
+        if (progreso.explicacion) {
+          document.getElementById('explicacion').value = progreso.explicacion;
+        }
+      }
+      document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
+      const el = document.getElementById(progreso.seccion);
+      if (el) el.classList.add('activo');
+      else document.getElementById('cap1').classList.add('activo');
+    } else {
+      document.getElementById('cap1').classList.add('activo');
+    }
+  });
+
+  history.pushState(null, null, location.href);
+  window.addEventListener('popstate', function () {
+    if (flujoActivo) {
+      history.pushState(null, null, location.href);
+      alert('Debes terminar el formulario antes de salir. 💙');
+    }
+  });
+
+  function mostrarSeccion(id) {
+    document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
+    document.getElementById(id).classList.add('activo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const ta = document.getElementById('explicacion');
+    guardarProgreso(id, decision, ta ? ta.value : '');
+  }
+
+  function aplicarMensajeEleccion(valor) {
+    const icono = document.getElementById('iconoEleccion');
+    const titulo = document.getElementById('tituloEleccion');
+    const texto = document.getElementById('textoEleccion');
+
+    if (valor === 'esperar') {
+      icono.textContent = '❦';
+      titulo.textContent = 'Gracias por querer quedarte';
+      texto.textContent = 'No sabes lo que significa para mí que quieras caminar esto conmigo. Prometo no hacerte arrepentirte. Cuéntame por qué elegiste esperarme...';
+    } else if (valor === 'irme') {
+      icono.textContent = '❦';
+      titulo.textContent = 'Entiendo tu decisión';
+      texto.textContent = 'Gracias por ser sincera conmigo. Si tu decisión es irte, lo respeto. Cuéntame por qué prefieres irte ahora...';
+    } else {
+      icono.textContent = '❦';
+      titulo.textContent = 'Está bien tomarte tu tiempo';
+      texto.textContent = 'No hay prisa. Cuando quieras hablamos con calma. Cuéntame por qué necesitas pensarlo...';
+    }
+  }
+
+  function elegir(valor) {
+    decision = valor;
+    aplicarMensajeEleccion(valor);
+    document.getElementById('explicacion').value = '';
+    mostrarSeccion('seccionEleccion');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const textarea = document.getElementById('explicacion');
+    if (textarea) {
+      textarea.addEventListener('input', function () {
+        guardarProgreso('seccionEleccion', decision, this.value);
+      });
+    }
+  });
+
+  function enviar() {
+    if (!decision) return;
+
+    const explicacion = document.getElementById('explicacion').value.trim();
+    if (!explicacion) {
+      alert('Por favor, cuéntame por qué elegiste esa opción 💙');
+      return;
+    }
+
+    const historial = JSON.parse(localStorage.getItem('historialLuz') || '[]');
+    historial.push({
+      decision: decision,
+      explicacion: explicacion,
+      fecha: new Date().toISOString()
+    });
+    localStorage.setItem('historialLuz', JSON.stringify(historial));
+
+    flujoActivo = false;
+    guardarProgreso('final', decision, explicacion);
+
+    document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
+
+    const final = document.getElementById('final');
+    const titulo = document.getElementById('tituloFinal');
+    const texto = document.getElementById('textoFinal');
+    const btn = document.getElementById('btnWsp');
+
+    let msg = '';
+    if (decision === 'esperar') {
+      titulo.textContent = 'Gracias, Luz';
+      texto.textContent = 'No sabes lo que significa para mí que quieras caminar esto conmigo. Prometo no hacerte arrepentirte.';
+      msg = `Hola Carabalí, mi respuesta es: TE ESPERO LOS 3 AÑOS.\n\nPor qué lo elegí: ${explicacion}`;
+    } else if (decision === 'irme') {
+      titulo.textContent = 'Te entiendo, Luz';
+      texto.textContent = 'Gracias por leerlo y por ser sincera. Si tu decisión es irte, lo respeto. Solo gratitud por el tiempo que compartimos.';
+      msg = `Hola Carabalí, mi respuesta es: PREFIERO IRME AHORA.\n\nPor qué lo elegí: ${explicacion}`;
+    } else {
+      titulo.textContent = 'Tómate tu tiempo, Luz';
+      texto.textContent = 'Está bien. No hay prisa. Cuando quieras hablamos con calma. Aquí voy a estar, sin presionarte.';
+      msg = `Carabalí, mi respuesta es: NECESITO PENSARLO.\n\nPor qué lo elegí: ${explicacion}`;
+    }
+
+    const url = `https://wa.me/${MI_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+    btn.href = url;
+    final.classList.add('activo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
