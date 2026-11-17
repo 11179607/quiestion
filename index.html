@@ -402,6 +402,42 @@
   .btn-wsp:hover,
   .btn-wsp:active { opacity: 0.85; }
 
+  .estado-envio {
+    margin: 18px 0 0;
+    color: #7a6f63;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .btn-confirmar-envio {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px 18px;
+    min-height: 48px;
+    background: #fdfbf7;
+    border: 1px solid #c9a84c;
+    color: #8b5a2b;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-confirmar-envio:hover:not(:disabled) {
+    background: #c9a84c;
+    color: #fdfbf7;
+  }
+
+  .btn-confirmar-envio:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .btn-reiniciar {
     display: inline-block;
     margin-top: clamp(14px, 3vw, 20px);
@@ -524,7 +560,9 @@
     <h2 id="tituloFinal"></h2>
     <p id="textoFinal"></p>
     <a id="btnWsp" class="btn-wsp" href="#" target="_blank">Abrir WhatsApp</a>
-    <button type="button" id="btnReiniciar" class="btn-reiniciar">Volver a empezar</button>
+    <p class="estado-envio" id="estadoEnvio">Abre WhatsApp, envía el mensaje y luego confirma aquí que lo enviaste.</p>
+    <button type="button" id="btnConfirmarEnvio" class="btn-confirmar-envio" disabled>Ya envié el mensaje</button>
+    <button type="button" id="btnReiniciar" class="btn-reiniciar" disabled>Volver a empezar</button>
   </div>
 
 </div>
@@ -533,7 +571,8 @@
   const MI_WHATSAPP = "573105950990";
   let decision = null;
   let flujoActivo = true;
-  let mensajeWhatsAppEnviado = false;
+  let whatsappAbierto = false;
+  let mensajeWhatsAppConfirmado = false;
 
   function leerJSONSeguro(clave, valorPorDefecto = null) {
     try {
@@ -545,34 +584,47 @@
     }
   }
 
-  function guardarProgreso(seccionId, decisionVal, explicacionVal, enviadoWhatsapp = false) {
+  function guardarProgreso(seccionId, decisionVal, explicacionVal) {
     try {
       localStorage.setItem('progresoLuz', JSON.stringify({
         seccion: seccionId || 'cap1',
         decision: decisionVal || null,
         explicacion: explicacionVal || '',
-        mensajeEnviado: Boolean(enviadoWhatsapp)
+        whatsappAbierto: whatsappAbierto,
+        confirmacionWhatsApp: mensajeWhatsAppConfirmado
       }));
     } catch (e) {
       // Si localStorage no está disponible, no rompemos el flujo.
     }
   }
 
-  function actualizarBotonReinicio() {
+  function actualizarEstadoEnvio() {
     const btnReiniciar = document.getElementById('btnReiniciar');
-    if (!btnReiniciar) return;
+    const btnConfirmar = document.getElementById('btnConfirmarEnvio');
+    const estado = document.getElementById('estadoEnvio');
 
-    btnReiniciar.disabled = !mensajeWhatsAppEnviado;
-    btnReiniciar.style.opacity = mensajeWhatsAppEnviado ? '1' : '0.55';
-    btnReiniciar.style.cursor = mensajeWhatsAppEnviado ? 'pointer' : 'not-allowed';
+    if (btnReiniciar) {
+      btnReiniciar.disabled = !mensajeWhatsAppConfirmado;
+    }
+    if (btnConfirmar) {
+      btnConfirmar.disabled = !whatsappAbierto || mensajeWhatsAppConfirmado;
+    }
+    if (estado) {
+      estado.textContent = mensajeWhatsAppConfirmado
+        ? 'Gracias por confirmar el envío. Ya puedes volver a empezar.'
+        : whatsappAbierto
+          ? 'Cuando termines de enviar el mensaje en WhatsApp, confírmalo aquí.'
+          : 'Abre WhatsApp, envía el mensaje y luego confirma aquí que lo enviaste.';
+    }
   }
 
   function reiniciarFlujo() {
-    if (!mensajeWhatsAppEnviado) return;
+    if (!mensajeWhatsAppConfirmado) return;
 
     decision = null;
     flujoActivo = true;
-    mensajeWhatsAppEnviado = false;
+    whatsappAbierto = false;
+    mensajeWhatsAppConfirmado = false;
 
     try {
       localStorage.removeItem('progresoLuz');
@@ -584,8 +636,18 @@
     const textarea = document.getElementById('explicacion');
     if (textarea) textarea.value = '';
 
-    actualizarBotonReinicio();
+    actualizarEstadoEnvio();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function confirmarEnvioWhatsApp() {
+    if (!whatsappAbierto || mensajeWhatsAppConfirmado) return;
+    if (!window.confirm('¿Terminaste de enviar el mensaje desde WhatsApp?')) return;
+
+    mensajeWhatsAppConfirmado = true;
+    const textarea = document.getElementById('explicacion');
+    guardarProgreso('final', decision, textarea ? textarea.value.trim() : '');
+    actualizarEstadoEnvio();
   }
 
   function prepararVistaFinal(valorDecision, explicacion) {
@@ -612,14 +674,15 @@
 
     btn.href = `https://wa.me/${MI_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
     final.classList.add('activo');
-    actualizarBotonReinicio();
+    actualizarEstadoEnvio();
   }
 
   window.addEventListener('load', function () {
     const progreso = leerJSONSeguro('progresoLuz');
 
     if (progreso && progreso.seccion) {
-      mensajeWhatsAppEnviado = Boolean(progreso.mensajeEnviado);
+      whatsappAbierto = progreso.whatsappAbierto === true;
+      mensajeWhatsAppConfirmado = progreso.confirmacionWhatsApp === true;
 
       if (progreso.decision) {
         decision = progreso.decision;
@@ -647,7 +710,7 @@
       document.getElementById('cap1').classList.add('activo');
     }
 
-    actualizarBotonReinicio();
+    actualizarEstadoEnvio();
   });
 
   history.pushState(null, null, location.href);
@@ -708,8 +771,23 @@
     const btnReiniciar = document.getElementById('btnReiniciar');
     if (btnReiniciar) {
       btnReiniciar.addEventListener('click', function () {
-        if (!mensajeWhatsAppEnviado) return;
+        if (!mensajeWhatsAppConfirmado) return;
         reiniciarFlujo();
+      });
+    }
+
+    const btnConfirmarEnvio = document.getElementById('btnConfirmarEnvio');
+    if (btnConfirmarEnvio) {
+      btnConfirmarEnvio.addEventListener('click', confirmarEnvioWhatsApp);
+    }
+
+    const btnWsp = document.getElementById('btnWsp');
+    if (btnWsp) {
+      btnWsp.addEventListener('click', function () {
+        whatsappAbierto = true;
+        const textarea = document.getElementById('explicacion');
+        guardarProgreso('final', decision, textarea ? textarea.value.trim() : '');
+        actualizarEstadoEnvio();
       });
     }
   });
@@ -736,8 +814,9 @@
     }
 
     flujoActivo = false;
-    mensajeWhatsAppEnviado = true;
-    guardarProgreso('final', decision, explicacion, true);
+    whatsappAbierto = false;
+    mensajeWhatsAppConfirmado = false;
+    guardarProgreso('final', decision, explicacion);
 
     document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
     prepararVistaFinal(decision, explicacion);
