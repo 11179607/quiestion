@@ -402,6 +402,33 @@
   .btn-wsp:hover,
   .btn-wsp:active { opacity: 0.85; }
 
+  .btn-reiniciar {
+    display: inline-block;
+    margin-top: clamp(14px, 3vw, 20px);
+    padding: clamp(12px, 3vw, 15px) clamp(24px, 7vw, 30px);
+    min-height: 48px;
+    background: transparent;
+    border: 1px solid #c9a84c;
+    color: #8b5a2b;
+    text-decoration: none;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(0.72rem, 2.5vw, 0.8rem);
+    letter-spacing: clamp(1.5px, 0.6vw, 2px);
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .btn-reiniciar:hover,
+  .btn-reiniciar:active {
+    background: #c9a84c;
+    color: #fdfbf7;
+  }
+
   /* -------- MEDIA QUERIES EXTRA -------- */
   @media (max-width: 360px) {
     .seccion h2 { font-size: 1.2rem; }
@@ -497,6 +524,7 @@
     <h2 id="tituloFinal"></h2>
     <p id="textoFinal"></p>
     <a id="btnWsp" class="btn-wsp" href="#" target="_blank">Abrir WhatsApp</a>
+    <button type="button" id="btnReiniciar" class="btn-reiniciar">Volver a empezar</button>
   </div>
 
 </div>
@@ -526,6 +554,23 @@
     } catch (e) {
       // Si localStorage no está disponible, no rompemos el flujo.
     }
+  }
+
+  function reiniciarFlujo() {
+    decision = null;
+    flujoActivo = true;
+
+    try {
+      localStorage.removeItem('progresoLuz');
+    } catch (e) {}
+
+    document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
+    document.getElementById('cap1').classList.add('activo');
+
+    const textarea = document.getElementById('explicacion');
+    if (textarea) textarea.value = '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function prepararVistaFinal(valorDecision, explicacion) {
@@ -638,6 +683,11 @@
       textarea.addEventListener('input', function () {
         guardarProgreso('seccionEleccion', decision, this.value);
       });
+    }
+
+    const btnReiniciar = document.getElementById('btnReiniciar');
+    if (btnReiniciar) {
+      btnReiniciar.addEventListener('click', reiniciarFlujo);
     }
   });
 
