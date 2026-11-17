@@ -502,38 +502,84 @@
 </div>
 
 <script>
-  const MI_WHATSAPP = "573105950990"; // ← CAMBIA por tu número real
+  const MI_WHATSAPP = "573105950990";
   let decision = null;
   let flujoActivo = true;
+
+  function leerJSONSeguro(clave, valorPorDefecto = null) {
+    try {
+      const valor = localStorage.getItem(clave);
+      if (!valor) return valorPorDefecto;
+      return JSON.parse(valor);
+    } catch (e) {
+      return valorPorDefecto;
+    }
+  }
 
   function guardarProgreso(seccionId, decisionVal, explicacionVal) {
     try {
       localStorage.setItem('progresoLuz', JSON.stringify({
-        seccion: seccionId,
+        seccion: seccionId || 'cap1',
         decision: decisionVal || null,
         explicacion: explicacionVal || ''
       }));
-    } catch(e) {}
+    } catch (e) {
+      // Si localStorage no está disponible, no rompemos el flujo.
+    }
+  }
+
+  function prepararVistaFinal(valorDecision, explicacion) {
+    const final = document.getElementById('final');
+    const titulo = document.getElementById('tituloFinal');
+    const texto = document.getElementById('textoFinal');
+    const btn = document.getElementById('btnWsp');
+
+    let mensaje = '';
+
+    if (valorDecision === 'esperar') {
+      titulo.textContent = 'Gracias, Luz';
+      texto.textContent = 'No sabes lo que significa para mí que quieras caminar esto conmigo. Prometo no hacerte arrepentirte.';
+      mensaje = `Hola Carabalí, mi respuesta es: TE ESPERO LOS 3 AÑOS.\n\nPor qué lo elegí: ${explicacion}`;
+    } else if (valorDecision === 'irme') {
+      titulo.textContent = 'Te entiendo, Luz';
+      texto.textContent = 'Gracias por leerlo y por ser sincera. Si tu decisión es irte, lo respeto. Solo gratitud por el tiempo que compartimos.';
+      mensaje = `Hola Carabalí, mi respuesta es: PREFIERO IRME AHORA.\n\nPor qué lo elegí: ${explicacion}`;
+    } else {
+      titulo.textContent = 'Tómate tu tiempo, Luz';
+      texto.textContent = 'Está bien. No hay prisa. Cuando quieras hablamos con calma. Aquí voy a estar, sin presionarte.';
+      mensaje = `Carabalí, mi respuesta es: NECESITO PENSARLO.\n\nPor qué lo elegí: ${explicacion}`;
+    }
+
+    btn.href = `https://wa.me/${MI_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
+    final.classList.add('activo');
   }
 
   window.addEventListener('load', function () {
-    let progreso = null;
-    try {
-      progreso = JSON.parse(localStorage.getItem('progresoLuz') || 'null');
-    } catch(e) {}
+    const progreso = leerJSONSeguro('progresoLuz');
 
     if (progreso && progreso.seccion) {
       if (progreso.decision) {
         decision = progreso.decision;
-        aplicarMensajeEleccion(progreso.decision);
-        if (progreso.explicacion) {
-          document.getElementById('explicacion').value = progreso.explicacion;
+        aplicarMensajeEleccion(decision);
+        const textarea = document.getElementById('explicacion');
+        if (textarea && progreso.explicacion) {
+          textarea.value = progreso.explicacion;
         }
       }
+
       document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
+
+      if (progreso.seccion === 'final' && decision) {
+        prepararVistaFinal(decision, progreso.explicacion || '');
+        return;
+      }
+
       const el = document.getElementById(progreso.seccion);
-      if (el) el.classList.add('activo');
-      else document.getElementById('cap1').classList.add('activo');
+      if (el) {
+        el.classList.add('activo');
+      } else {
+        document.getElementById('cap1').classList.add('activo');
+      }
     } else {
       document.getElementById('cap1').classList.add('activo');
     }
@@ -549,7 +595,10 @@
 
   function mostrarSeccion(id) {
     document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
-    document.getElementById(id).classList.add('activo');
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('activo');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const ta = document.getElementById('explicacion');
     guardarProgreso(id, decision, ta ? ta.value : '');
@@ -578,7 +627,8 @@
   function elegir(valor) {
     decision = valor;
     aplicarMensajeEleccion(valor);
-    document.getElementById('explicacion').value = '';
+    const textarea = document.getElementById('explicacion');
+    if (textarea) textarea.value = '';
     mostrarSeccion('seccionEleccion');
   }
 
@@ -600,42 +650,23 @@
       return;
     }
 
-    const historial = JSON.parse(localStorage.getItem('historialLuz') || '[]');
-    historial.push({
-      decision: decision,
-      explicacion: explicacion,
-      fecha: new Date().toISOString()
-    });
-    localStorage.setItem('historialLuz', JSON.stringify(historial));
+    try {
+      const historial = leerJSONSeguro('historialLuz', []);
+      historial.push({
+        decision: decision,
+        explicacion: explicacion,
+        fecha: new Date().toISOString()
+      });
+      localStorage.setItem('historialLuz', JSON.stringify(historial));
+    } catch (e) {
+      // No bloqueamos el envío si localStorage falla.
+    }
 
     flujoActivo = false;
     guardarProgreso('final', decision, explicacion);
 
     document.querySelectorAll('.seccion, .mensaje-eleccion, .final').forEach(s => s.classList.remove('activo'));
-
-    const final = document.getElementById('final');
-    const titulo = document.getElementById('tituloFinal');
-    const texto = document.getElementById('textoFinal');
-    const btn = document.getElementById('btnWsp');
-
-    let msg = '';
-    if (decision === 'esperar') {
-      titulo.textContent = 'Gracias, Luz';
-      texto.textContent = 'No sabes lo que significa para mí que quieras caminar esto conmigo. Prometo no hacerte arrepentirte.';
-      msg = `Hola Carabalí, mi respuesta es: TE ESPERO LOS 3 AÑOS.\n\nPor qué lo elegí: ${explicacion}`;
-    } else if (decision === 'irme') {
-      titulo.textContent = 'Te entiendo, Luz';
-      texto.textContent = 'Gracias por leerlo y por ser sincera. Si tu decisión es irte, lo respeto. Solo gratitud por el tiempo que compartimos.';
-      msg = `Hola Carabalí, mi respuesta es: PREFIERO IRME AHORA.\n\nPor qué lo elegí: ${explicacion}`;
-    } else {
-      titulo.textContent = 'Tómate tu tiempo, Luz';
-      texto.textContent = 'Está bien. No hay prisa. Cuando quieras hablamos con calma. Aquí voy a estar, sin presionarte.';
-      msg = `Carabalí, mi respuesta es: NECESITO PENSARLO.\n\nPor qué lo elegí: ${explicacion}`;
-    }
-
-    const url = `https://wa.me/${MI_WHATSAPP}?text=${encodeURIComponent(msg)}`;
-    btn.href = url;
-    final.classList.add('activo');
+    prepararVistaFinal(decision, explicacion);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
